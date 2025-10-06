@@ -39,7 +39,7 @@ try:
                         elif 9 <= tc <= 18:  # Airborne position
                             print(f"   Position message (TC={tc})")
                         elif tc == 19:  # Airborne velocity
-                            print(f"   Velocity message")
+                            print(f"   Velocity message (TC={tc})" )
             except Exception as e:
                 pass
         
