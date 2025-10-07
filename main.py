@@ -27,19 +27,26 @@ try:
             try:
                 if pms.crc(msg) == 0:  # valid CRC
                     valid_count += 1
-                    df = pms.df(msg)
+                    df = pms.df(msg) # Downlink Format
                     icao = pms.icao(msg)
                     print(f"✓ DF{df:2d} | ICAO {icao} | {msg}")
-                    
+                    print("Downlink Format:", df)
                     if df == 17:  # ADS-B
                         tc = pms.adsb.typecode(msg)
                         if 1 <= tc <= 4:  # Identification
                             callsign = pms.adsb.callsign(msg)
                             print(f"   Callsign: {callsign}")
                         elif 9 <= tc <= 18:  # Airborne position
-                            print(f"   Position message (TC={tc})")
+                            position = pms.adsb.position(msg, None, None)
+                            altitude = pms.adsb.altitude(msg)
+                            print(f"   Position message (POS={position, altitude})")
                         elif tc == 19:  # Airborne velocity
-                            print(f"   Velocity message (TC={tc})" )
+                            velocity = pms.adsb.velocity(msg)
+                            heading = pms.adsb.heading(msg)
+                            print(f"   Velocity message (VEL={velocity, heading})" )
+
+                        elif tc == 28: # Aircraft status
+                            pass
             except Exception as e:
                 pass
         

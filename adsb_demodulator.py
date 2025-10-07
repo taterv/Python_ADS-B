@@ -6,7 +6,7 @@ def detect_preamble(mag, i, spb, threshold):
     Detect Mode S preamble pattern in magnitude array.
     
     Mode S uses an 8 µs preamble with a specific pulse pattern:
-    1010000010101000 (16 chips × 0.5 µs each)
+    1010000010101000 (16 chips x 0.5 µs each)
     High pulses occur at chips 0, 2, 7, and 9 (at 0, 1, 3.5, 4.5 µs)
     
     """
