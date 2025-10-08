@@ -11,9 +11,8 @@ def detect_preamble(mag, i, spb, threshold):
     
     """
     try:
-        # Sample at center of each 0.5 µs chip for accurate detection
-        high_times = [0.25, 1.25, 3.75, 4.75]  # Centers of high pulse chips
-        low_times = [2.25, 2.75, 5.25, 6.25, 7.25]  # Centers of low valley chips
+        high_times = [0.1, 1.1, 3.6, 5.1]
+        low_times  = [0.6, 1.6, 2.6, 4.1, 4.6, 5.6, 6.6, 7.6]
         
         highs = [mag[int(i + t * spb)] for t in high_times]
         lows = [mag[int(i + t * spb)] for t in low_times]
@@ -21,25 +20,19 @@ def detect_preamble(mag, i, spb, threshold):
         avg_high = np.mean(highs)
         avg_low = np.mean(lows)
         
-        if avg_high < threshold:
+        if avg_high < threshold * 0.75:
             return False
             
-        if avg_high < avg_low * 2.0:
-            return False
-            
-        if min(highs) < threshold * 0.6:
+        if avg_high < avg_low * 1.5:
             return False
         
-        if max(lows) > avg_high * 0.6:
-            return False
-                
         return True
         
     except IndexError:
         return False
 
 
-def decode_bits(mag, start_idx, spb, num_bits=112):
+def decode_bits(mag, start_idx, spb, num_bits=112, threshold=None):
     """
     Decode Pulse Position Modulation (PPM) bits from magnitude array.
     
@@ -52,25 +45,16 @@ def decode_bits(mag, start_idx, spb, num_bits=112):
     into the bit period).
     """
     bits = []
-    
     for bit_num in range(num_bits):
-        # Each bit is 1 µs, starting 8 µs after preamble
         bit_start = start_idx + (8 + bit_num) * spb
-        
+        idx1 = int(bit_start + 0.25 * spb)
+        idx2 = int(bit_start + 0.75 * spb)
         try:
-            # Sample at center of each 0.5 µs chip
-            idx1 = int(bit_start + 0.25 * spb)  # Center of first chip
-            idx2 = int(bit_start + 0.75 * spb)  # Center of second chip
-            
             chip1 = mag[idx1]
             chip2 = mag[idx2]
-            
-            # PPM: first chip > second chip means bit = 1
             bits.append(1 if chip1 > chip2 else 0)
-            
         except IndexError:
             break
-    
     return bits
 
 
@@ -109,31 +93,28 @@ def detect_messages(samples, sample_rate=2.4e6):
     """
     magnitudes = np.abs(samples)
     
-    # Apply smoothing filter (0.5 µs window) to reduce noise
     window = int(sample_rate / 1e6 * 0.5)
     if window > 1:
         magnitudes = np.convolve(magnitudes, np.ones(window)/window, mode='same')
     
-    # Dynamic threshold: mean + 2 standard deviations
     threshold = np.mean(magnitudes) + 2.0 * np.std(magnitudes)
     
     messages = []
-    spb = sample_rate / 1e6  # samples per microsecond
+    spb = sample_rate / 1e6
     i = 0
-    min_gap = int(120 * spb)  # Minimum 120 µs between messages
+    min_gap = int(120 * spb)
 
     while i < len(magnitudes) - int(120 * spb):
         if detect_preamble(magnitudes, i, spb, threshold):
-            bits = decode_bits(magnitudes, i, spb, 112)
+            bits = decode_bits(magnitudes, i, spb, 112, threshold)
             
             if len(bits) >= 56:
                 hex_msg = bits_to_hex(bits)
                 if hex_msg:
                     messages.append(hex_msg)
-                    # Skip past this message to avoid re-detecting
                     i += min_gap
                     continue
         
-        i += int(spb)  # Advance by 1 µs
+        i += int(spb)
     
     return messages

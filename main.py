@@ -4,9 +4,9 @@ import adsb_demodulator as adsb
 
 # --- SDR Setup ---
 sdr = RtlSdr()
-sdr.sample_rate = 2.4e6
+sdr.sample_rate = 2.0e6
 sdr.center_freq = 1090e6
-sdr.gain = 40.2
+sdr.gain = 35
 
 # --- Main loop ---
 print("Listening for ADS-B on 1090 MHz... (Ctrl+C to stop)")
@@ -23,9 +23,9 @@ try:
         
         for msg in msgs:
             total_count += 1
-            
             try:
-                if pms.crc(msg) == 0:  # valid CRC
+                crc_result = pms.crc(msg)
+                if crc_result == 0:  # valid CRC
                     valid_count += 1
                     df = pms.df(msg) # Downlink Format
                     icao = pms.icao(msg)
@@ -47,8 +47,12 @@ try:
 
                         elif tc == 28: # Aircraft status
                             pass
+                else: 
+                    if total_count <= 10:
+                        print(f"✗ CRC failed: {msg} (CRC residual: {crc_result:06X})")
             except Exception as e:
-                pass
+                if total_count <= 10:
+                    print(f"✗ Error decoding: {msg} - {e}")
         
         if total_count > 0 and total_count % 100 == 0:
             print(f"Stats: {valid_count}/{total_count} valid ({100*valid_count/total_count:.1f}%)")
