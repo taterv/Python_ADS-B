@@ -76,7 +76,7 @@ def bits_to_hex(bits):
         return None
 
 
-def detect_messages(samples, sample_rate=2.4e6):
+def detect_messages(samples, sample_rate):
     """
     Detect and decode Mode S ADS-B messages from IQ sample stream.
     

@@ -1,12 +1,13 @@
 from rtlsdr import RtlSdr
 import pyModeS as pms
 import adsb_demodulator as adsb
+import tc_functions as tc
 
 # --- SDR Setup ---
 sdr = RtlSdr()
 sdr.sample_rate = 2.0e6
 sdr.center_freq = 1090e6
-sdr.gain = 35
+sdr.gain = 40
 
 # --- Main loop ---
 print("Listening for ADS-B on 1090 MHz... (Ctrl+C to stop)")
@@ -23,6 +24,7 @@ try:
         
         for msg in msgs:
             total_count += 1
+            
             try:
                 crc_result = pms.crc(msg)
                 if crc_result == 0:  # valid CRC
@@ -30,26 +32,12 @@ try:
                     df = pms.df(msg) # Downlink Format
                     icao = pms.icao(msg)
                     print(f"✓ DF{df:2d} | ICAO {icao} | {msg}")
-                    print("Downlink Format:", df)
                     if df == 17:  # ADS-B
-                        tc = pms.adsb.typecode(msg)
-                        if 1 <= tc <= 4:  # Identification
-                            callsign = pms.adsb.callsign(msg)
-                            print(f"   Callsign: {callsign}")
-                        elif 9 <= tc <= 18:  # Airborne position
-                            position = pms.adsb.position(msg, None, None)
-                            altitude = pms.adsb.altitude(msg)
-                            print(f"   Position message (POS={position, altitude})")
-                        elif tc == 19:  # Airborne velocity
-                            velocity = pms.adsb.velocity(msg)
-                            heading = pms.adsb.heading(msg)
-                            print(f"   Velocity message (VEL={velocity, heading})" )
-
-                        elif tc == 28: # Aircraft status
-                            pass
-                else: 
-                    if total_count <= 10:
-                        print(f"✗ CRC failed: {msg} (CRC residual: {crc_result:06X})")
+                        tc.handle_df17_message(msg, icao)
+                    elif df == 18:  # TIS-B / ADS-R
+                        print("Non-transponder ADS-B")
+                    else:
+                        print(f"Other downlink format (DF={df})")
             except Exception as e:
                 if total_count <= 10:
                     print(f"✗ Error decoding: {msg} - {e}")
