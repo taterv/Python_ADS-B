@@ -14,6 +14,7 @@ This project collects and decodes ADS-B (Mode S) messages from aircraft using an
 - Python 3.x
 - [pyrtlsdr](https://github.com/roger-/pyrtlsdr)
 - [pyModeS](https://github.com/junzis/pyModeS)
+- [NumPy](https://numpy.org/)
 - ADS-B SDR USB dongle and antenna (I used AirNav Radar ADS-B with 1090MHz antenna)
 
 Install dependencies:
@@ -26,7 +27,7 @@ pip install pyrtlsdr pyModeS numpy
 1. Plug in the ADS-B SDR dongle to your device and connect the antenna to the SDR.
 2. Run the main script:
     ```sh
-    python main.py
+    bash start.sh
     ```
 3. The script will print detected ADS-B messages, including aircraft ICAO addresses and callsigns. Example return (https://www.flightdb.net/aircraft.php?modes=461FA2): 
 

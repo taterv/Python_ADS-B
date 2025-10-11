@@ -33,7 +33,9 @@ def handle_identification(msg, icao):
 
 
 def handle_airborne_position(msg, icao):
-    """Handle TC 9-18: Airborne Position with proper Compact Position Reporting (CPR) decoding."""
+    """Handle TC 9-18: Airborne Position with proper Compact Position Reporting (CPR) decoding.
+       Postions are reported both with even and odd frames, and both are required for exact position. 
+    """
     tc = pms.adsb.typecode(msg)
     
     try:
@@ -60,7 +62,7 @@ def handle_airborne_position(msg, icao):
     odd_time = aircraft_state[icao]['odd_time']
     
     # CPR requires both odd and even frames within ~10 seconds
-    if even_msg and odd_msg and abs(even_time - odd_time) < 10:
+    if even_msg and odd_msg and abs(even_time - odd_time) < 30:
         try:
             lat, lon = pms.adsb.position(even_msg, odd_msg, even_time, odd_time)
             aircraft_state[icao]['position'] = (lat, lon)
