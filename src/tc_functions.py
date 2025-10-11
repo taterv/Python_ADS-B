@@ -1,6 +1,7 @@
 import pyModeS as pms
 import time
 from collections import defaultdict
+import location as location
 
 aircraft_state = defaultdict(lambda: {
     'even_msg': None,
@@ -62,7 +63,7 @@ def handle_airborne_position(msg, icao):
     odd_time = aircraft_state[icao]['odd_time']
     
     # CPR requires both odd and even frames within ~10 seconds
-    if even_msg and odd_msg and abs(even_time - odd_time) < 30:
+    if even_msg and odd_msg and abs(even_time - odd_time) < 10:
         try:
             lat, lon = pms.adsb.position(even_msg, odd_msg, even_time, odd_time)
             aircraft_state[icao]['position'] = (lat, lon)
@@ -75,15 +76,30 @@ def handle_airborne_position(msg, icao):
             elif tc in [13, 14, 15, 16]:
                 print(f"GNSS altitude (TC{tc})")
             elif tc in [17, 18]:
-                print(f"Special position (TC{tc})")
-                
+                print(f"Special position (TC{tc})")      
+            position_decoded = True
         except Exception as e:
-            print(f"Position decode failed: {e}")
-    else:
-        frame_type = "EVEN" if oe_flag == 0 else "ODD"
-        alt_str = f"Alt: {altitude} ft" if altitude else "Alt: Unknown"
-        print(f"Airborne position (TC{tc}) - {frame_type} frame, {alt_str}")
-        print(f"(Need {'ODD' if oe_flag == 0 else 'EVEN'} frame to decode lat/lon)")
+            print(f"An error occurred during geolocation: {e}")
+    else: 
+        try:
+            dev_lat, dev_lon = location.get_lat_long_from_device_ip()
+            lat, lon = pms.adsb.position_with_ref(even_msg if even_msg else odd_msg, dev_lat, dev_lon)
+            aircraft_state[icao]['position'] = (lat, lon)
+
+            alt_str = f"{altitude} ft" if altitude else "Unknown"
+            print(f"Position: {lat:.6f}°, {lon:.6f}° @ {alt_str}")
+            
+            if tc in [9, 10, 11, 12]:
+                print(f"Barometric altitude (TC{tc})")
+            elif tc in [13, 14, 15, 16]:
+                print(f"GNSS altitude (TC{tc})")
+            elif tc in [17, 18]:
+                print(f"Special position (TC{tc})")      
+            position_decoded = True
+        except Exception as e:
+            print(f"An error occurred during geolocation: {e}")
+       
+    
 
 def handle_airborne_velocity(msg, icao):
     """Handle TC 19: Airborne Velocity."""
