@@ -43,5 +43,23 @@ class DatabaseManager:
             return None
         finally:
             session.close()
-    
-    # ... rest of your methods
+            
+    def update_callsign(self, icao, callsign):
+        session = self.get_session()
+        try:
+            aircraft = session.query(Aircraft).filter_by(icao=icao).first()
+            
+            if aircraft:
+                aircraft.callsign = callsign.strip()
+                aircraft.last_seen = datetime.utcnow()
+            else:
+                aircraft = Aircraft(icao=icao, callsign=callsign.strip())
+                session.add(aircraft)
+            
+            session.commit()
+            
+        except Exception as e:
+            session.rollback()
+            print(f"Error updating callsign: {e}")
+        finally:
+            session.close()
