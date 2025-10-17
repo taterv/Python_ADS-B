@@ -4,7 +4,7 @@ import adsb_demodulator as adsb
 import tc_functions as tc
 import time
 import numpy as np
-
+from db.handlers.db import DatabaseManager
 # --- SDR Setup ---
 sdr = RtlSdr()
 sdr.sample_rate = 2.0e6
@@ -15,6 +15,7 @@ sdr.gain = 40
 print("Listening for ADS-B on 1090 MHz... (Ctrl+C to stop)")
 print(f"Sample rate: {sdr.sample_rate/1e6:.1f} Msps, Gain: {sdr.gain} dB")
 
+db = DatabaseManager('adsb_data.db', echo=False)
 valid_count = 0
 total_count = 0
 stats_interval = 200
@@ -35,7 +36,7 @@ try:
                 df = pms.df(msg)
                 icao = pms.icao(msg)
                 print(f"✓ DF{df:2d} | ICAO {icao} | {msg}")
-                    
+                db.add_aircraft(icao)
                 if df == 17:  # ADS-B
                     tc.handle_df17_message(msg, icao)
                 elif df == 18:  # TIS-B / ADS-R

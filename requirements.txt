@@ -3,3 +3,4 @@ pyModeS>=2.21.1
 numpy>=1.26.4
 geocoder>=1.38.1
 requests>=2.32.5
+sqlalchemy>=2.0.44

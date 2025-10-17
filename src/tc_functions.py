@@ -2,6 +2,9 @@ import pyModeS as pms
 import time
 from collections import defaultdict
 import location as location
+from db.handlers.db import DatabaseManager
+
+db = DatabaseManager('adsb_data.db', echo=False)
 
 aircraft_state = defaultdict(lambda: {
     'even_msg': None,
@@ -24,6 +27,7 @@ def handle_identification(msg, icao):
     category = pms.adsb.category(msg)
     
     aircraft_state[icao]['callsign'] = callsign
+    db.update_callsign(icao, callsign)
     
     print(f"Callsign: {callsign}")
     print(f"Category: {category} (TC{tc})")

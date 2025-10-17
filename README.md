@@ -15,6 +15,7 @@ This project collects and decodes ADS-B (Mode S) messages from aircraft using an
 - [pyrtlsdr](https://github.com/roger-/pyrtlsdr)
 - [pyModeS](https://github.com/junzis/pyModeS)
 - [NumPy](https://numpy.org/)
+
 - ADS-B SDR USB dongle and antenna (I used AirNav Radar ADS-B with 1090MHz antenna)
 
 Install dependencies if running outside venv:
