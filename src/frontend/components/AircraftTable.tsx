@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import StatsCards from './StatsCards';
+import SearchBar from './SearchBar';
+import AircraftTableHeader from './AircraftTableHeader';
+import AircraftTableRows from './AircraftTableRows';
 
 interface Aircraft {
   id: number;
@@ -77,7 +81,8 @@ export default function AircraftTable() {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      hour12: false
     });
   };
 
@@ -101,7 +106,6 @@ export default function AircraftTable() {
     (ac.callsign && ac.callsign.toLowerCase().includes(filter.toLowerCase()))
   );
 
-
   const sortedAircraft = [...filteredAircraft].sort((a, b) => {
     let aVal = a[sortField];
     let bVal = b[sortField];
@@ -119,6 +123,7 @@ export default function AircraftTable() {
     return 0;
   });
 
+  // Handle sort
   const handleSort = (field: keyof Aircraft) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -126,12 +131,6 @@ export default function AircraftTable() {
       setSortField(field);
       setSortDirection('desc');
     }
-  };
-
-
-  const SortIcon = ({ field }: { field: keyof Aircraft }) => {
-    if (sortField !== field) return <span className="text-gray-400">↕</span>;
-    return <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>;
   };
 
   return (
@@ -142,51 +141,11 @@ export default function AircraftTable() {
             ADS-B Aircraft Tracker
           </h1>
           <p className="text-gray-600">
-            Real-time aircraft monitoring and database viewer
+            Seen ADS-B aircraft 
           </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm text-gray-600 mb-1">Total Aircraft</div>
-            <div className="text-3xl font-bold text-gray-900">
-              {aircraft.length}
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm text-gray-600 mb-1">Active (1h)</div>
-            <div className="text-3xl font-bold text-green-600">
-              {aircraft.filter(ac => {
-                const diff = new Date().getTime() - new Date(ac.last_seen).getTime();
-                return diff < 3600000;
-              }).length}
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm text-gray-600 mb-1">With Callsign</div>
-            <div className="text-3xl font-bold text-blue-600">
-              {aircraft.filter(ac => ac.callsign).length}
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm text-gray-600 mb-1">Total Messages</div>
-            <div className="text-3xl font-bold text-purple-600">
-              {aircraft.reduce((sum, ac) => sum + ac.message_count, 0).toLocaleString()}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow mb-6 p-4">
-          <input
-            type="text"
-            placeholder="Search by ICAO or Callsign..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-
+        <StatsCards aircraft={aircraft} />
+        <SearchBar filter={filter} onFilterChange={setFilter} />
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
@@ -206,95 +165,17 @@ export default function AircraftTable() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('icao')}
-                    >
-                      ICAO <SortIcon field="icao" />
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('callsign')}
-                    >
-                      Callsign <SortIcon field="callsign" />
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('message_count')}
-                    >
-                      Messages <SortIcon field="message_count" />
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('first_seen')}
-                    >
-                      First Seen <SortIcon field="first_seen" />
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('last_seen')}
-                    >
-                      Last Seen <SortIcon field="last_seen" />
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
+                <AircraftTableHeader 
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                />
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {sortedAircraft.map((ac) => {
-                    const isRecent = new Date().getTime() - new Date(ac.last_seen).getTime() < 300000; // 5 minutes
-                    
-                    return (
-                      <tr key={ac.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="font-mono font-semibold text-gray-900">
-                              {ac.icao}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {ac.callsign || (
-                              <span className="text-gray-400 italic">Unknown</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {ac.message_count.toLocaleString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">
-                            {formatDateTime(ac.first_seen)}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">
-                            {formatDateTime(ac.last_seen)}
-                            <div className="text-xs text-gray-500">
-                              {timeAgo(ac.last_seen)}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {isRecent ? (
-                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Active
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                              Inactive
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  <AircraftTableRows 
+                    aircraft={sortedAircraft}
+                    formatDateTime={formatDateTime}
+                    timeAgo={timeAgo}
+                  />
                 </tbody>
               </table>
             </div>
