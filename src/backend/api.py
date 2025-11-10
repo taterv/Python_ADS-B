@@ -5,26 +5,23 @@ Run: uvicorn api:app --host 0.0.0.0 --port 8000
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from db import DatabaseManager
-from datetime import datetime, timedelta
+from db.handlers.db import DatabaseManager
+from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel
 
 app = FastAPI(title="ADS-B API")
 
-# Enable CORS for frontend on different machine
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your PC's IP
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize database
 db = DatabaseManager()
 
-# Response models
 class AircraftResponse(BaseModel):
     id: int
     icao: str
@@ -55,10 +52,8 @@ def get_aircraft(
     else:
         aircraft_list = db.get_all_aircraft()
     
-    # Limit results
     aircraft_list = aircraft_list[:limit]
     
-    # Convert to response format
     return [
         AircraftResponse(
             id=ac.id,

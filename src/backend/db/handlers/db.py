@@ -63,3 +63,11 @@ class DatabaseManager:
             print(f"Error updating callsign: {e}")
         finally:
             session.close()
+
+    def get_all_aircraft(self):
+        session = self.get_session()
+        try:
+            aircraft_list = session.query(Aircraft).all()
+            return aircraft_list
+        finally:
+            session.close()
