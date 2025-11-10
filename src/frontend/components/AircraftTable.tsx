@@ -29,7 +29,7 @@ export default function AircraftTable() {
       setError(null);
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.1.135:8000';
-      const res = await fetch(`${apiUrl}/api/aircraft/`);
+      const res = await fetch(`${apiUrl}/api/aircraft`);
       
       if (!res.ok) {
         setLoading(false);
