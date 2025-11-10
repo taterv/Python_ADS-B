@@ -1,7 +1,7 @@
 import pyModeS as pms
 import time
 from collections import defaultdict
-import location as location
+import backend.location as location
 from db.handlers.db import DatabaseManager
 
 db = DatabaseManager('adsb_data.db', echo=False)

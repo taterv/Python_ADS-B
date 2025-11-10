@@ -1,7 +1,7 @@
 from rtlsdr import RtlSdr
 import pyModeS as pms
-import adsb_demodulator as adsb
-import tc_functions as tc
+import backend.adsb_demodulator as adsb
+import backend.tc_functions as tc
 import time
 import numpy as np
 from db.handlers.db import DatabaseManager

@@ -23,55 +23,29 @@ export default function AircraftTable() {
   const [sortField, setSortField] = useState<keyof Aircraft>('last_seen');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  // Mock data for now, replace with actual api calls later
   useEffect(() => {
-    const mockData: Aircraft[] = [
-      {
-        id: 1,
-        icao: 'ABC123',
-        callsign: 'FIN123',
-        first_seen: '2025-11-08T10:30:00Z',
-        last_seen: '2025-11-08T14:45:00Z',
-        message_count: 245
-      },
-      {
-        id: 2,
-        icao: 'DEF456',
-        callsign: 'SAS789',
-        first_seen: '2025-11-08T11:15:00Z',
-        last_seen: '2025-11-08T14:42:00Z',
-        message_count: 189
-      },
-      {
-        id: 3,
-        icao: '4CA123',
-        callsign: null,
-        first_seen: '2025-11-08T13:20:00Z',
-        last_seen: '2025-11-08T14:40:00Z',
-        message_count: 67
-      },
-      {
-        id: 4,
-        icao: 'A1B2C3',
-        callsign: 'BAW456',
-        first_seen: '2025-11-08T09:00:00Z',
-        last_seen: '2025-11-08T14:38:00Z',
-        message_count: 521
-      },
-      {
-        id: 5,
-        icao: '123ABC',
-        callsign: 'LH789',
-        first_seen: '2025-11-08T12:45:00Z',
-        last_seen: '2025-11-08T14:35:00Z',
-        message_count: 312
-      }
-    ];
+    const fetchAircraft = async () => {
+      setLoading(true);
+      setError(null);
 
-    setTimeout(() => {
-      setAircraft(mockData);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.1.135:8000';
+      const res = await fetch(`${apiUrl}/api/aircraft/`);
+      
+      if (!res.ok) {
+        setLoading(false);
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      setAircraft(data);
       setLoading(false);
-    }, 500);
+    };
+
+    fetchAircraft();
+
+    const interval = setInterval(fetchAircraft, 5000);
+    return () => clearInterval(interval);
+    
   }, []);
 
   const formatDateTime = (dateString: string) => {
