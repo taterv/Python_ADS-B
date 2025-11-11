@@ -64,6 +64,20 @@ class DatabaseManager:
         finally:
             session.close()
 
+    def update_location(self, location):
+        session = self.get_session()
+        try:
+            aircraft = session.query(Aircraft).filter_by(icao=icao).first()
+            
+            if aircraft:
+                aircraft.location = location
+                session.commit()
+        except Exception as e:
+            session.rollback()
+            print(f"Error updating location: {e}")
+        finally:
+            session.close()
+
     def get_all_aircraft(self):
         session = self.get_session()
         try:

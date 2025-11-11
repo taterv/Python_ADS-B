@@ -48,8 +48,8 @@ export default function AircraftTable() {
     
   }, []);
 
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
+   const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString + (dateString.endsWith('Z') ? '' : 'Z'));
     return date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -62,7 +62,7 @@ export default function AircraftTable() {
 
   const timeAgo = (dateString: string) => {
     const now = new Date();
-    const then = new Date(dateString);
+    const then = new Date(dateString + (dateString.endsWith('Z') ? '' : 'Z'));
     const diffMs = now.getTime() - then.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     
@@ -97,7 +97,6 @@ export default function AircraftTable() {
     return 0;
   });
 
-  // Handle sort
   const handleSort = (field: keyof Aircraft) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');

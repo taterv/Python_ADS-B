@@ -16,6 +16,7 @@ class Aircraft(Base):
     first_seen = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_seen = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     message_count = Column(Integer, default=0)
+    location = Column(String(50), nullable=True)
     
     def __repr__(self):
         return f"<Aircraft(icao={self.icao}, callsign={self.callsign}, messages={self.message_count})>"
