@@ -50,10 +50,10 @@ class DatabaseManager:
             aircraft = session.query(Aircraft).filter_by(icao=icao).first()
             
             if aircraft:
-                aircraft.callsign = callsign.strip()
+                aircraft.callsign = callsign.strip("__")
                 aircraft.last_seen = datetime.utcnow()
             else:
-                aircraft = Aircraft(icao=icao, callsign=callsign.strip())
+                aircraft = Aircraft(icao=icao, callsign=callsign.strip("__"))
                 session.add(aircraft)
             
             session.commit()
