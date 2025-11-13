@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 from db.models.aircraft import Aircraft, Base
+import re
 
 class DatabaseManager:
     def __init__(self, db_path='adsb_data.db', echo=False):
@@ -50,10 +51,12 @@ class DatabaseManager:
             aircraft = session.query(Aircraft).filter_by(icao=icao).first()
             
             if aircraft:
-                aircraft.callsign = callsign.strip("__")
+                aircraft.callsign = callsign.strip()
+                callsign = callsign.re.sub(r'[^a-zA-Z0-9]', '', callsign)
                 aircraft.last_seen = datetime.utcnow()
             else:
-                aircraft = Aircraft(icao=icao, callsign=callsign.strip("__"))
+                aircraft = Aircraft(icao=icao, callsign=callsign.strip())
+                callsign = callsign.re.sub(r'[^a-zA-Z0-9]', '', callsign)
                 session.add(aircraft)
             
             session.commit()
@@ -64,13 +67,21 @@ class DatabaseManager:
         finally:
             session.close()
 
-    def update_location(self, location):
+    def update_location(self, icao, location):
+        """Update or create aircraft row with latest location.
+           location is expected as a string 'lat,lon' or similar.
+        """
         session = self.get_session()
         try:
             aircraft = session.query(Aircraft).filter_by(icao=icao).first()
             
             if aircraft:
                 aircraft.location = location
+                aircraft.last_seen = datetime.utcnow()
+                session.commit()
+            else:
+                aircraft = Aircraft(icao=icao, location=location)
+                session.add(aircraft)
                 session.commit()
         except Exception as e:
             session.rollback()

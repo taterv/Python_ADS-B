@@ -71,7 +71,9 @@ def handle_airborne_position(msg, icao):
             aircraft_state[icao]['position'] = (lat, lon)
             
             alt_str = f"{altitude} ft" if altitude else "Unknown"
-            print(f"Position: {lat:.6f}°, {lon:.6f}° @ {alt_str}")
+            
+            location_str = f"{lat:.6f},{lon:.6f}"
+            db.update_location(icao, location_str)
             
             if tc in [9, 10, 11, 12]:
                 print(f"Barometric altitude (TC{tc})")
@@ -88,8 +90,9 @@ def handle_airborne_position(msg, icao):
             aircraft_state[icao]['position'] = (lat, lon)
 
             alt_str = f"{altitude} ft" if altitude else "Unknown"
-            print(f"Position: {lat:.6f}°, {lon:.6f}° @ {alt_str}")
-            db.update_location(f"{lat:.6f},{lon:.6f}")
+            
+            location_str = f"{lat:.6f},{lon:.6f}"
+            db.update_location(icao, location_str)
             
             if tc in [9, 10, 11, 12]:
                 print(f"Barometric altitude (TC{tc})")

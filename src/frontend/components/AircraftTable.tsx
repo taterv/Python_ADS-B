@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import StatsCards from './StatsCards';
 import SearchBar from './SearchBar';
 import AircraftTableHeader from './AircraftTableHeader';
@@ -22,10 +22,28 @@ export default function AircraftTable() {
   const [filter, setFilter] = useState('');
   const [sortField, setSortField] = useState<keyof Aircraft>('last_seen');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const initialLoad = useRef(true);
+
+
+  const isSameAircraftList = (a: Aircraft[], b: Aircraft[]) => {
+    if (!Array.isArray(a) || !Array.isArray(b)) return false;
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      const pa = a[i];
+      const pb = b[i];
+      if (pa.id !== pb.id) return false;
+      if (pa.icao !== pb.icao) return false;
+      if (pa.callsign !== pb.callsign) return false;
+      if (pa.first_seen !== pb.first_seen) return false;
+      if (pa.last_seen !== pb.last_seen) return false;
+      if (pa.message_count !== pb.message_count) return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     const fetchAircraft = async () => {
-      setLoading(true);
+      if (initialLoad.current) setLoading(true);
       setError(null);
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.1.135:8000';
@@ -37,11 +55,20 @@ export default function AircraftTable() {
       }
 
       const data = await res.json();
-      setAircraft(data);
+
+      // Update state only when the fetched data actually differs from current state.
+      setAircraft((prev) => {
+        if (isSameAircraftList(prev, data)) {
+          return prev;
+        }
+        return data;
+      });
+
       setLoading(false);
+      initialLoad.current = false;
     };
 
-    fetchAircraft();
+  fetchAircraft();
 
     const interval = setInterval(fetchAircraft, 5000);
     return () => clearInterval(interval);
